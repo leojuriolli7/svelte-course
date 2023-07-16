@@ -22,11 +22,16 @@
       title: "Go to the gym",
       completed: true,
     },
+    {
+      id: uuid(),
+      title:
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras congue lacus sit amet diam consectetur, ut ultricies enim commodo. Ut a molestie mi. Pellentesque eleifend quam ac tincidunt pharetra.",
+      completed: true,
+    },
   ];
 
   async function handleAddTodo(event) {
     event.preventDefault();
-    console.log(document.querySelectorAll(".todo-list ul li"));
 
     todos = [
       ...todos,
@@ -38,7 +43,6 @@
     ];
 
     await tick();
-    console.log(document.querySelectorAll(".todo-list ul li"));
 
     // after api call is successfull, we clear the input:
     todoList.clearInput();
@@ -63,12 +67,12 @@
   }
 </script>
 
-<button on:click={() => (showList = !showList)}>
+<button style:margin-bottom="10px" on:click={() => (showList = !showList)}>
   {showList ? "Hide" : "Show"} list
 </button>
 
 {#if showList === true}
-  <div style:max-width="200px">
+  <div style:max-width="400px">
     <TodoList
       {todos}
       bind:this={todoList}
