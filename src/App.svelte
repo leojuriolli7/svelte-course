@@ -3,17 +3,20 @@
   import { onMount, tick } from "svelte";
   import { v4 as uuid } from "uuid";
 
+  const API_URL = "https://jsonplaceholder.typicode.com/todos";
+
   let showList = true;
   let todoList;
 
   let loading = true;
   let success = false;
+  let isAdding = false;
   let error = null;
   let todos = null;
 
   async function loadTodos() {
     loading = true;
-    await fetch("https://jsonplaceholder.typicode.com/todos?_limit=10")
+    await fetch(`${API_URL}?_limit=10`)
       .then(async (res) => {
         if (res.ok) {
           todos = await res.json();
@@ -34,21 +37,51 @@
 
   async function handleAddTodo(event) {
     event.preventDefault();
+    isAdding = true;
 
-    todos = [
-      ...todos,
-      {
-        id: uuid(),
+    await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
         title: event.detail.title,
         completed: false,
+      }),
+      headers: {
+        "Content-type": "application/json;charset=UTF-8",
       },
-    ];
+    })
+      .then(async (res) => {
+        if (res.ok) {
+          const todo = await res.json();
 
-    await tick();
+          todos = [
+            ...todos,
+            {
+              completed: todo.completed,
+              title: todo.title,
 
-    // after api call is successfull, we clear the input:
-    todoList.clearInput();
-    todoList.focusInput();
+              // because it is a fake API, the ids
+              // will always be the same. so need to
+              // override.
+              id: uuid(),
+            },
+          ];
+
+          // if api call is successfull, we clear the input:
+          todoList.clearInput();
+        } else {
+          alert("An error has occurred");
+        }
+      })
+      .catch((e) => {
+        alert(e.message || "An error has occurred");
+      })
+      .finally(async () => {
+        isAdding = false;
+
+        // wait for `isAdding = false` to re-enable input in the DOM.
+        await tick();
+        todoList.focusInput();
+      });
   }
 
   function handleDeleteTodo(e) {
@@ -80,6 +113,7 @@
       {loading}
       {error}
       {success}
+      disabled={isAdding}
       bind:this={todoList}
       on:addtodo={handleAddTodo}
       on:removetodo={handleDeleteTodo}

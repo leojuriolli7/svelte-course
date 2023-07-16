@@ -9,6 +9,7 @@
   export let error = null;
   export let loading = true;
   export let success = false;
+  export let disabled = false;
 
   let prevTodos = todos;
   let listContainer, listContainerScrollHeight, inputValue, input, autoscroll;
@@ -125,10 +126,15 @@
         bind:this={input}
         type="text"
         bind:value={inputValue}
+        disabled={disabled || loading}
       />
-      <Button class="add-todo-button" type="submit" disabled={!inputValue}
-        >Add</Button
+      <Button
+        class="add-todo-button"
+        type="submit"
+        disabled={!inputValue || disabled || loading}
       >
+        Add
+      </Button>
     </form>
   {/if}
 </div>
@@ -236,6 +242,8 @@
     // this component.
     :global(.add-todo-button) {
       background-color: aqua;
+      width: 60px;
+      height: 45px;
     }
   }
 </style>
