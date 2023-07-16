@@ -1,0 +1,10 @@
+:root {
+  --buttonBgColor: #ff3e00;
+  --buttonTextColor: white;
+  background-color: #151313;
+  color: #fff;
+}
+
+body {
+  padding: 16px;
+}
