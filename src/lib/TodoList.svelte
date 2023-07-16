@@ -4,6 +4,8 @@
   import Button from "./Button.svelte";
   import FaRegTrashAlt from "svelte-icons/fa/FaRegTrashAlt.svelte";
   import { createEventDispatcher, afterUpdate } from "svelte";
+  import { scale } from "svelte/transition";
+  import { flip } from "svelte/animate";
 
   export let todos = null;
   export let error = null;
@@ -11,6 +13,7 @@
   export let success = false;
   export let disabled = false;
   export let disabledItems = [];
+  export let scrollOnAdd = undefined;
 
   let prevTodos = todos;
   let listContainer, listContainerScrollHeight, inputValue, input, autoscroll;
@@ -28,11 +31,17 @@
   }
 
   afterUpdate(() => {
-    // if autoscroll flag is enabled, we scroll to new item and
-    // flag it back to false.
-    if (autoscroll) {
-      listContainer.scrollTo(0, listContainerScrollHeight);
-      autoscroll = false;
+    let pos;
+    if (scrollOnAdd === "top") pos = 0;
+    if (scrollOnAdd === "bottom") pos = listContainerScrollHeight;
+
+    if (scrollOnAdd) {
+      // if autoscroll flag is enabled, we scroll to new item and
+      // flag it back to false.
+      if (autoscroll) {
+        listContainer.scrollTo(0, pos);
+        autoscroll = false;
+      }
     }
   });
 
@@ -96,9 +105,20 @@
           <ul bind:offsetHeight={listContainerScrollHeight}>
             {#each todos as todo, index (todo.id)}
               {@const { title, id, completed } = todo}
-              <slot {todo} {handleCheckbox}>
-                <li>
-                  <div class:completed>
+              <!-- 
+                1. animate:flip must be used inside a list with keys
+                2. will only trigger animation when list order changes
+               -->
+              <li animate:flip={{ duration: 300 }}>
+                <slot {todo} {handleCheckbox}>
+                  <div
+                    transition:scale={{
+                      // initial scale:
+                      start: 0.5,
+                      duration: 300,
+                    }}
+                    class:completed
+                  >
                     <label>
                       <input
                         type="checkbox"
@@ -120,8 +140,8 @@
                       </span>
                     </button>
                   </div>
-                </li>
-              </slot>
+                </slot>
+              </li>
             {/each}
           </ul>
         {/if}

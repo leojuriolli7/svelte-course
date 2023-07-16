@@ -1,6 +1,7 @@
 <script>
   import TodoList from "./lib/TodoList.svelte";
   import { onMount, tick } from "svelte";
+  import { fly } from "svelte/transition";
   import { v4 as uuid } from "uuid";
 
   const API_URL = "https://jsonplaceholder.typicode.com/todos";
@@ -55,7 +56,6 @@
           const todo = await res.json();
 
           todos = [
-            ...todos,
             {
               completed: todo.completed,
               title: todo.title,
@@ -65,6 +65,7 @@
               // override.
               id: uuid(),
             },
+            ...todos,
           ];
 
           // if api call is successfull, we clear the input:
@@ -164,6 +165,7 @@
       on:addtodo={handleAddTodo}
       on:removetodo={handleDeleteTodo}
       on:updatetodo={handleUpdateTodo}
+      scrollOnAdd="top"
       let:todo
       let:handleCheckbox
     >
@@ -183,6 +185,22 @@
       </svelte:fragment> -->
     </TodoList>
   </div>
+
+  {#if todos}
+    <p>
+      Number of todos:
+      {#key todos.length}
+        <span
+          style:display="inline-block"
+          in:fly={{
+            y: -10,
+          }}
+        >
+          {todos.length}
+        </span>
+      {/key}
+    </p>
+  {/if}
 {/if}
 
 <style>
