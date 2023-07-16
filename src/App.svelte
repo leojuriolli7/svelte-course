@@ -1,5 +1,6 @@
 <script>
   import TodoList from "./lib/TodoList.svelte";
+  import { tick } from "svelte";
   import { v4 as uuid } from "uuid";
 
   let showList = true;
@@ -23,8 +24,9 @@
     },
   ];
 
-  function handleAddTodo(event) {
+  async function handleAddTodo(event) {
     event.preventDefault();
+    console.log(document.querySelectorAll(".todo-list ul li"));
 
     todos = [
       ...todos,
@@ -34,6 +36,9 @@
         completed: false,
       },
     ];
+
+    await tick();
+    console.log(document.querySelectorAll(".todo-list ul li"));
 
     // after api call is successfull, we clear the input:
     todoList.clearInput();
