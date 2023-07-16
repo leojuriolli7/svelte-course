@@ -10,6 +10,7 @@
   export let loading = true;
   export let success = false;
   export let disabled = false;
+  export let disabledItems = [];
 
   let prevTodos = todos;
   let listContainer, listContainerScrollHeight, inputValue, input, autoscroll;
@@ -93,27 +94,34 @@
           <p class="feedback-text">No TO-DOs yet.</p>
         {:else}
           <ul bind:offsetHeight={listContainerScrollHeight}>
-            {#each todos as { title, id, completed } (id)}
-              <li class:completed>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={completed}
-                    on:change={(e) => handleCheckbox(e, id)}
-                  />
-                  {title}
-                </label>
+            {#each todos as todo, index (todo.id)}
+              {@const { title, id, completed } = todo}
+              <slot {todo} {handleCheckbox}>
+                <li>
+                  <div class:completed>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={completed}
+                        disabled={disabledItems.includes(id)}
+                        on:change={(e) => handleCheckbox(e, id)}
+                      />
+                      <slot name="title" {index} {title}>{title}</slot>
+                    </label>
 
-                <button
-                  class="remove-todo-button"
-                  aria-label="Delete {title}"
-                  on:click={() => handleClickRemove(id)}
-                >
-                  <span style:width="10px" style:display="inline-block">
-                    <FaRegTrashAlt />
-                  </span>
-                </button>
-              </li>
+                    <button
+                      class="remove-todo-button"
+                      aria-label="Delete {title}"
+                      disabled={disabledItems.includes(id)}
+                      on:click={() => handleClickRemove(id)}
+                    >
+                      <span style:width="10px" style:display="inline-block">
+                        <FaRegTrashAlt />
+                      </span>
+                    </button>
+                  </div>
+                </li>
+              </slot>
             {/each}
           </ul>
         {/if}
@@ -158,7 +166,7 @@
         padding: 10px;
         list-style-type: none;
 
-        li {
+        li > div {
           margin-bottom: 5px;
           display: flex;
           align-items: center;
@@ -184,6 +192,10 @@
             input[type="checkbox"] {
               margin: 0 10px 0 0;
               cursor: pointer;
+
+              &:disabled {
+                cursor: not-allowed;
+              }
             }
           }
 
@@ -199,6 +211,11 @@
             height: 25px;
             cursor: pointer;
             display: none;
+
+            &:disabled {
+              opacity: 0.4;
+              cursor: not-allowed;
+            }
 
             &:hover {
               background: #7f1d1d90;

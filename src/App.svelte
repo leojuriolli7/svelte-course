@@ -13,6 +13,7 @@
   let isAdding = false;
   let error = null;
   let todos = null;
+  let disabledItems = [];
 
   async function loadTodos() {
     loading = true;
@@ -84,21 +85,65 @@
       });
   }
 
-  function handleDeleteTodo(e) {
-    todos = todos.filter((todo) => todo.id !== e.detail.id);
+  async function handleDeleteTodo(e) {
+    const id = e.detail.id;
+
+    if (disabledItems.includes(id)) return;
+
+    disabledItems = [...disabledItems, id];
+    await fetch(`${API_URL}/${id}`, { method: "DELETE" })
+      .then((res) => {
+        if (res.ok) {
+          todos = todos.filter((todo) => todo.id !== e.detail.id);
+        } else {
+          alert("An error has occurred");
+        }
+      })
+      .catch((e) => {
+        alert(e.message || "An error has occurred");
+      })
+      .finally(() => {
+        disabledItems = disabledItems.filter((i) => i !== id);
+      });
   }
 
-  function handleUpdateTodo(e) {
-    todos = todos.map((todo) => {
-      if (todo.id === e.detail.id) {
-        return {
-          ...todo,
-          completed: e.detail.value,
-        };
-      }
+  async function handleUpdateTodo(e) {
+    const id = e.detail.id;
+    const value = e.detail.value;
 
-      return todo;
-    });
+    if (disabledItems.includes(id)) return;
+    disabledItems = [...disabledItems, id];
+
+    await fetch(`${API_URL}/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        completed: value,
+      }),
+      headers: {
+        "Content-type": "application/json;charset=UTF-8",
+      },
+    })
+      .then(async (res) => {
+        if (res.ok) {
+          const updatedTodo = await res.json();
+
+          todos = todos.map((todo) => {
+            if (todo.id === id) {
+              return updatedTodo;
+            }
+
+            return { ...todo };
+          });
+        } else {
+          alert("An error has occurred");
+        }
+      })
+      .catch((e) => {
+        alert(e.message || "An error has occurred");
+      })
+      .finally(() => {
+        disabledItems = disabledItems.filter((i) => i !== id);
+      });
   }
 </script>
 
@@ -113,12 +158,30 @@
       {loading}
       {error}
       {success}
+      {disabledItems}
       disabled={isAdding}
       bind:this={todoList}
       on:addtodo={handleAddTodo}
       on:removetodo={handleDeleteTodo}
       on:updatetodo={handleUpdateTodo}
-    />
+      let:todo
+      let:handleCheckbox
+    >
+      <!-- {@const { id, completed, title } = todo}
+      <div>
+        <input
+          type="checkbox"
+          checked={completed}
+          disabled={disabledItems.includes(id)}
+          on:change={(e) => handleCheckbox(e, id)}
+        />
+        {title}
+      </div> -->
+
+      <!-- <svelte:fragment slot="title" let:title let:index>
+        {index + 1} - {title}
+      </svelte:fragment> -->
+    </TodoList>
   </div>
 {/if}
 
