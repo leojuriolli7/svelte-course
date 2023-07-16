@@ -1,34 +1,36 @@
 <script>
   import TodoList from "./lib/TodoList.svelte";
-  import { tick } from "svelte";
+  import { onMount, tick } from "svelte";
   import { v4 as uuid } from "uuid";
 
   let showList = true;
   let todoList;
 
-  let todos = [
-    {
-      id: uuid(),
-      title: "Pay taxes",
-      completed: true,
-    },
-    {
-      id: uuid(),
-      title: "Study",
-      completed: false,
-    },
-    {
-      id: uuid(),
-      title: "Go to the gym",
-      completed: true,
-    },
-    {
-      id: uuid(),
-      title:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras congue lacus sit amet diam consectetur, ut ultricies enim commodo. Ut a molestie mi. Pellentesque eleifend quam ac tincidunt pharetra.",
-      completed: true,
-    },
-  ];
+  let loading = true;
+  let success = false;
+  let error = null;
+  let todos = null;
+
+  async function loadTodos() {
+    loading = true;
+    await fetch("https://jsonplaceholder.typicode.com/todos?_limit=10")
+      .then(async (res) => {
+        if (res.ok) {
+          todos = await res.json();
+          success = true;
+        } else {
+          throw new Error("An error has occured.");
+        }
+      })
+      .catch((e) => {
+        error = e;
+      })
+      .finally(() => {
+        loading = false;
+      });
+  }
+
+  onMount(() => loadTodos());
 
   async function handleAddTodo(event) {
     event.preventDefault();
@@ -75,6 +77,9 @@
   <div style:max-width="400px">
     <TodoList
       {todos}
+      {loading}
+      {error}
+      {success}
       bind:this={todoList}
       on:addtodo={handleAddTodo}
       on:removetodo={handleDeleteTodo}

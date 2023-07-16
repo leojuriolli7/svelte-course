@@ -5,7 +5,11 @@
   import FaRegTrashAlt from "svelte-icons/fa/FaRegTrashAlt.svelte";
   import { createEventDispatcher, afterUpdate } from "svelte";
 
-  export let todos = [];
+  export let todos = null;
+  export let error = null;
+  export let loading = true;
+  export let success = false;
+
   let prevTodos = todos;
   let listContainer, listContainerScrollHeight, inputValue, input, autoscroll;
 
@@ -15,7 +19,7 @@
   $: {
     // when todos change, we check if there is a new todo
     // and allow autoscroll.
-    autoscroll = todos.length > prevTodos?.length;
+    autoscroll = todos && prevTodos && todos.length > prevTodos?.length;
 
     // after checking for autoscroll, we update prevTodos.
     prevTodos = todos;
@@ -73,50 +77,60 @@
 </script>
 
 <div class="todo-list-wrapper">
-  <div bind:this={listContainer} class="todo-list">
-    <div>
-      {#if todos.length === 0}
-        <p class="no-items-text">No TO-DOs yet.</p>
-      {:else}
-        <ul bind:offsetHeight={listContainerScrollHeight}>
-          {#each todos as { title, id, completed } (id)}
-            <li class:completed>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={completed}
-                  on:change={(e) => handleCheckbox(e, id)}
-                />
-                {title}
-              </label>
+  {#if loading}
+    <p class="feedback-text">Loading...</p>
+  {/if}
 
-              <button
-                class="remove-todo-button"
-                aria-label="Delete {title}"
-                on:click={() => handleClickRemove(id)}
-              >
-                <span style:width="10px" style:display="inline-block">
-                  <FaRegTrashAlt />
-                </span>
-              </button>
-            </li>
-          {/each}
-        </ul>
-      {/if}
+  {#if !!error}
+    <p class="feedback-text">{error?.message || "An error has occured"}</p>
+  {/if}
+
+  {#if success === true}
+    <div bind:this={listContainer} class="todo-list">
+      <div>
+        {#if todos.length === 0}
+          <p class="feedback-text">No TO-DOs yet.</p>
+        {:else}
+          <ul bind:offsetHeight={listContainerScrollHeight}>
+            {#each todos as { title, id, completed } (id)}
+              <li class:completed>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={completed}
+                    on:change={(e) => handleCheckbox(e, id)}
+                  />
+                  {title}
+                </label>
+
+                <button
+                  class="remove-todo-button"
+                  aria-label="Delete {title}"
+                  on:click={() => handleClickRemove(id)}
+                >
+                  <span style:width="10px" style:display="inline-block">
+                    <FaRegTrashAlt />
+                  </span>
+                </button>
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      </div>
     </div>
-  </div>
 
-  <form class="add-todo-form" on:submit|preventDefault={handleSubmit}>
-    <input
-      placeholder="Write a new TO-DO..."
-      bind:this={input}
-      type="text"
-      bind:value={inputValue}
-    />
-    <Button class="add-todo-button" type="submit" disabled={!inputValue}
-      >Add</Button
-    >
-  </form>
+    <form class="add-todo-form" on:submit|preventDefault={handleSubmit}>
+      <input
+        placeholder="Write a new TO-DO..."
+        bind:this={input}
+        type="text"
+        bind:value={inputValue}
+      />
+      <Button class="add-todo-button" type="submit" disabled={!inputValue}
+        >Add</Button
+      >
+    </form>
+  {/if}
 </div>
 
 <style lang="scss">
@@ -195,7 +209,7 @@
       }
     }
 
-    .no-items-text {
+    .feedback-text {
       margin: 0;
       padding: 15px;
       text-align: center;
