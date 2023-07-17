@@ -3,6 +3,7 @@
   import { onMount, tick } from "svelte";
   import { fly } from "svelte/transition";
   import { v4 as uuid } from "uuid";
+  import spin from "./lib/transitions/spin";
 
   const API_URL = "https://jsonplaceholder.typicode.com/todos";
 
@@ -153,7 +154,7 @@
 </button>
 
 {#if showList === true}
-  <div style:max-width="400px">
+  <div transition:spin style:max-width="400px">
     <TodoList
       {todos}
       {loading}
