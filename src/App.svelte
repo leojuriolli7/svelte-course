@@ -154,7 +154,7 @@
 </button>
 
 {#if showList === true}
-  <div transition:spin style:max-width="400px">
+  <div transition:spin style:max-width="800px">
     <TodoList
       {todos}
       {loading}
