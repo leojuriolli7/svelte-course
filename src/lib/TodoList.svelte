@@ -4,8 +4,18 @@
   import Button from "./Button.svelte";
   import FaRegTrashAlt from "svelte-icons/fa/FaRegTrashAlt.svelte";
   import { createEventDispatcher, afterUpdate } from "svelte";
-  import { scale } from "svelte/transition";
+  import { scale, crossfade } from "svelte/transition";
   import { flip } from "svelte/animate";
+
+  const [send, receive] = crossfade({
+    duration: 400,
+    fallback(node) {
+      return scale(node, {
+        start: 0.5,
+        duration: 300,
+      });
+    },
+  });
 
   export let todos = null;
   export let error = null;
@@ -14,6 +24,9 @@
   export let disabled = false;
   export let disabledItems = [];
   export let scrollOnAdd = undefined;
+
+  $: done = todos ? todos.filter((t) => t.completed === true) : [];
+  $: todo = todos ? todos.filter((t) => t.completed === false) : [];
 
   let prevTodos = todos;
   let listContainer, listContainerScrollHeight, inputValue, input, autoscroll;
@@ -102,48 +115,59 @@
         {#if todos.length === 0}
           <p class="feedback-text">No TO-DOs yet.</p>
         {:else}
-          <ul bind:offsetHeight={listContainerScrollHeight}>
-            {#each todos as todo, index (todo.id)}
-              {@const { title, id, completed } = todo}
-              <!-- 
-                1. animate:flip must be used inside a list with keys
+          <div style:display="flex">
+            {#each [todo, done] as list, index}
+              <div class="list-wrapper">
+                <h2>{index === 0 ? "TO-DOs" : "Done"}</h2>
+                <ul bind:offsetHeight={listContainerScrollHeight}>
+                  {#each list as todo, index (todo.id)}
+                    {@const { title, id, completed } = todo}
+                    <!-- 
+              1. animate:flip must be used inside a list with keys
                 2. will only trigger animation when list order changes
                -->
-              <li animate:flip={{ duration: 300 }}>
-                <slot {todo} {handleCheckbox}>
-                  <div
-                    transition:scale={{
-                      // initial scale:
-                      start: 0.5,
-                      duration: 300,
-                    }}
-                    class:completed
-                  >
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={completed}
-                        disabled={disabledItems.includes(id)}
-                        on:change={(e) => handleCheckbox(e, id)}
-                      />
-                      <slot name="title" {index} {title}>{title}</slot>
-                    </label>
+                    <li animate:flip={{ duration: 300 }}>
+                      <slot {todo} {handleCheckbox}>
+                        <div
+                          in:receive={{
+                            key: id,
+                          }}
+                          out:send={{
+                            key: id,
+                          }}
+                          class:completed
+                        >
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={completed}
+                              disabled={disabledItems.includes(id)}
+                              on:change={(e) => handleCheckbox(e, id)}
+                            />
+                            <slot name="title" {index} {title}>{title}</slot>
+                          </label>
 
-                    <button
-                      class="remove-todo-button"
-                      aria-label="Delete {title}"
-                      disabled={disabledItems.includes(id)}
-                      on:click={() => handleClickRemove(id)}
-                    >
-                      <span style:width="10px" style:display="inline-block">
-                        <FaRegTrashAlt />
-                      </span>
-                    </button>
-                  </div>
-                </slot>
-              </li>
+                          <button
+                            class="remove-todo-button"
+                            aria-label="Delete {title}"
+                            disabled={disabledItems.includes(id)}
+                            on:click={() => handleClickRemove(id)}
+                          >
+                            <span
+                              style:width="10px"
+                              style:display="inline-block"
+                            >
+                              <FaRegTrashAlt />
+                            </span>
+                          </button>
+                        </div>
+                      </slot>
+                    </li>
+                  {/each}
+                </ul>
+              </div>
             {/each}
-          </ul>
+          </div>
         {/if}
       </div>
     </div>
@@ -178,74 +202,83 @@
     }
 
     .todo-list {
-      max-height: 200px;
+      max-height: 400px;
       overflow: auto;
 
-      ul {
-        margin: 0;
+      .list-wrapper {
         padding: 10px;
-        list-style-type: none;
+        flex: 1;
 
-        li > div {
-          margin-bottom: 5px;
-          display: flex;
-          align-items: center;
-          background-color: #303030;
-          border-radius: 5px;
-          padding: 10px;
-          position: relative;
+        h2 {
+          margin: 0 0 10px 0;
+        }
 
-          &:hover {
-            .remove-todo-button {
-              display: block;
-            }
-          }
+        ul {
+          margin: 0;
+          padding: 0;
+          list-style-type: none;
 
-          label {
-            cursor: pointer;
-            user-select: none;
-            font-size: 18px;
+          li > div {
+            margin-bottom: 5px;
             display: flex;
-            align-items: baseline;
-            padding-right: 20px;
-
-            input[type="checkbox"] {
-              margin: 0 10px 0 0;
-              cursor: pointer;
-
-              &:disabled {
-                cursor: not-allowed;
-              }
-            }
-          }
-
-          .remove-todo-button {
-            border: none;
-            background: #7f1d1d;
-            border-radius: 3px;
-            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1),
-              0 1px 2px -1px rgb(0 0 0 / 0.1);
-            position: absolute;
-            right: 5px;
-            width: 25px;
-            height: 25px;
-            cursor: pointer;
-            display: none;
-
-            &:disabled {
-              opacity: 0.4;
-              cursor: not-allowed;
-            }
+            align-items: center;
+            background-color: #303030;
+            border-radius: 5px;
+            padding: 10px;
+            position: relative;
 
             &:hover {
-              background: #7f1d1d90;
+              .remove-todo-button {
+                display: block;
+              }
             }
 
-            // any svg inside .remove-todo-button,
-            // regardless if it is directly inside this component,
-            // or in another. (Icon library)
-            :global(svg) {
-              fill: #fef2f2;
+            label {
+              cursor: pointer;
+              user-select: none;
+              font-size: 18px;
+              display: flex;
+              align-items: baseline;
+              padding-right: 20px;
+
+              input[type="checkbox"] {
+                margin: 0 10px 0 0;
+                cursor: pointer;
+
+                &:disabled {
+                  cursor: not-allowed;
+                }
+              }
+            }
+
+            .remove-todo-button {
+              border: none;
+              background: #7f1d1d;
+              border-radius: 3px;
+              box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1),
+                0 1px 2px -1px rgb(0 0 0 / 0.1);
+              position: absolute;
+              right: 5px;
+              width: 25px;
+              height: 25px;
+              cursor: pointer;
+              display: none;
+
+              &:disabled {
+                opacity: 0.4;
+                cursor: not-allowed;
+              }
+
+              &:hover {
+                background: #7f1d1d90;
+              }
+
+              // any svg inside .remove-todo-button,
+              // regardless if it is directly inside this component,
+              // or in another. (Icon library)
+              :global(svg) {
+                fill: #fef2f2;
+              }
             }
           }
         }
