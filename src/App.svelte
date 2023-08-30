@@ -1,26 +1,36 @@
 <script>
-  import TodoPage from "./lib/TodoPage.svelte";
-  import longpress from "./lib/actions/long-press";
-  import tippy from "./lib/actions/tippy";
+  import { onMount } from "svelte";
+  import Home from "./lib/pages/Home.svelte";
+  import Settings from "./lib/pages/Settings.svelte";
 
-  let content = "Initial content";
+  let page;
+
+  function onRouteChange() {
+    const path = window.location.hash.slice(1);
+
+    if (path === "/") {
+      page = "home";
+    } else if (path === "/settings") {
+      page = "settings";
+    } else {
+      window.location.hash = "/";
+    }
+  }
+
+  onMount(onRouteChange);
 </script>
 
-<div>
-  <input bind:value={content} />
-  <button use:tippy={{ content, theme: "light", placement: "right" }}>
-    Tooltip
-  </button>
+<svelte:window on:hashchange={onRouteChange} />
 
-  <button
-    style:margin-bottom="20px"
-    on:longpress={() => console.log("long pressed")}
-    use:longpress={{
-      duration: 1000,
-    }}>Long press me</button
-  >
-</div>
+<nav>
+  <a href="#/">Home</a>
+  <a href="#/settings">Settings</a>
+</nav>
 
-<!-- <TodoPage /> -->
+{#if page === "home"}
+  <Home />
+{:else if page === "settings"}
+  <Settings />
+{/if}
 
 <style></style>
