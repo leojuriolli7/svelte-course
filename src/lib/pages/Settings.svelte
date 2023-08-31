@@ -4,12 +4,21 @@
 
 <h2>Settings</h2>
 
+<p>{$settings.language}</p>
+
 <button
   on:click={() => {
-    $settings.colorScheme =
-      $settings.colorScheme === "light" ? "dark" : "light";
+    settings.updateSetting("language", Math.random());
+  }}>Update language</button
+>
+
+<button
+  on:click={() => {
+    settings.toggleColorScheme();
   }}>Toggle color scheme</button
 >
+
+<br />
 
 <label>
   <input
@@ -29,3 +38,9 @@
   />
   Light
 </label>
+
+<button
+  on:click={() => {
+    settings.reset();
+  }}>Reset settings</button
+>

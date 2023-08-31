@@ -1,19 +1,37 @@
 import { writable } from "svelte/store";
 
-const settings = writable(
-  {
-    // default values:
+function createSettingsStore() {
+  const defaults = {
     colorScheme: "dark",
     language: "en",
     fontSize: 12,
-  },
-  () => {
-    console.log("from 0 to 1");
+  };
 
-    return () => {
-      console.log("from 1 to 0");
-    };
-  }
-);
+  // by passing {...defaults} we create a new object instead of passing
+  // the defaults object and allowing it to be mutated.
+  const { subscribe, set, update } = writable({ ...defaults });
 
-export default settings;
+  // only required method to be returned is `subscribe`
+  return {
+    subscribe,
+    set,
+    update,
+    reset: () => {
+      set({ ...defaults });
+    },
+    updateSetting: (key, value) => {
+      update((prev) => ({
+        ...prev,
+        [key]: value,
+      }));
+    },
+    toggleColorScheme: () => {
+      update((prev) => ({
+        ...prev,
+        colorScheme: prev.colorScheme === "light" ? "dark" : "light",
+      }));
+    },
+  };
+}
+
+export default createSettingsStore();
