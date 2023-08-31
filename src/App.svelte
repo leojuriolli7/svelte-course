@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import Home from "./lib/pages/Home.svelte";
   import Settings from "./lib/pages/Settings.svelte";
+  import Head from "./lib/Head.svelte";
 
   let page;
 
@@ -21,6 +22,8 @@
 </script>
 
 <svelte:window on:hashchange={onRouteChange} />
+
+<Head />
 
 <nav>
   <a href="#/">Home</a>
