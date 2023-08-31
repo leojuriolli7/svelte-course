@@ -1,4 +1,5 @@
 <script>
+  import direction from "../stores/direction";
   import settings from "../stores/settings";
 </script>
 
@@ -9,8 +10,9 @@
 <button
   on:click={() => {
     settings.updateSetting("language", Math.random());
-  }}>Update language</button
->
+  }}
+  >Update language
+</button>
 
 <button
   on:click={() => {
@@ -42,5 +44,15 @@
 <button
   on:click={() => {
     settings.reset();
-  }}>Reset settings</button
->
+  }}
+  >Reset settings
+</button>
+
+<br />
+
+<h2>{$direction}</h2>
+
+<select bind:value={$settings.language}>
+  <option value="en">English</option>
+  <option value="ar">Arabic</option>
+</select>
