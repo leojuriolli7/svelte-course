@@ -15,9 +15,6 @@
   setContext(formKey, formStore);
 </script>
 
-<pre>
-{JSON.stringify($formStore, null, 2)}
-</pre>
 <form
   on:submit|preventDefault={() => {
     if (Object.keys($formStore.errors).length === 0) {
@@ -27,5 +24,9 @@
     }
   }}
 >
-  <slot />
+  <slot
+    hasErrors={Object.keys($formStore.errors).length > 0}
+    values={$formStore.values}
+    errors={$formStore.errors}
+  />
 </form>

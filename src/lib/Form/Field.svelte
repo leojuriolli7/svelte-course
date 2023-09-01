@@ -6,6 +6,7 @@
   export let name;
   export let type = "text";
   export let label = undefined;
+  export let placeholder = undefined;
   export let validate = undefined;
 
   let isDirty = false;
@@ -29,7 +30,7 @@
     {id}
     {name}
     {type}
-    placeholder={label}
+    {placeholder}
     value={$formStore.values[name] || ""}
     on:input={(e) => {
       isDirty = true;
