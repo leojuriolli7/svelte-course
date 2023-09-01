@@ -1,47 +1,89 @@
 <script>
-  import { cubicInOut } from "svelte/easing";
-  import { tweened } from "svelte/motion";
-  import { interpolateRgb } from "d3-interpolate";
+  import Button from "../Button.svelte";
+  import isEmail from "validator/lib/isEmail";
 
-  const boxProps = tweened(
-    { width: 100, height: 100, color: "purple" },
-    {
-      duration: 200,
-      easing: cubicInOut,
-      interpolate: (old, final) => {
-        return (time) => {
-          const deltaWidth = final.width - old.width;
-          const deltaHeight = final.height - old.height;
-          const color = interpolateRgb(old.color, final.color)(time);
+  let values = { username: "", email: "", password: "" };
+  let isSubmitting = false;
+  let errors = { username: null, email: null, password: null };
 
-          return {
-            width: old.width + deltaWidth * time,
-            height: old.height + deltaHeight * time,
-            color,
-          };
-        };
-      },
+  function validateForm() {
+    const errors = {};
+    if (!values.username) {
+      errors.username = "Required";
     }
-  );
+
+    if (!values.email) {
+      errors.email = "Required";
+    }
+
+    if (!values.password) {
+      errors.password = "Required";
+    }
+
+    if (values.email && !isEmail(values.email)) {
+      errors.email = "Invalid email";
+    }
+
+    return errors;
+  }
 </script>
 
-<button
-  on:click={async () => {
-    // if animation is interrupted, this never resolves.
-    await boxProps.set(
-      {
-        width: Math.random() * 500,
-        height: Math.random() * 500,
-        color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
-      }
-      // can override config inside the set:
-      // { duration: 4000 }
-    );
+<form
+  on:submit|preventDefault={() => {
+    errors = validateForm();
+    const validForm = Object.values(errors).every((e) => e === null);
 
-    console.log("set is done");
-  }}>Randomize</button
+    if (validForm) {
+      console.log(values);
+      isSubmitting = true;
+
+      setTimeout(() => {
+        isSubmitting = false;
+      }, 1000);
+    }
+  }}
 >
+  <label for="username">Username</label>
+  {#if errors.username}
+    <p class="error-message">{errors.username}</p>
+  {/if}
+  <input
+    type="text"
+    id="username"
+    name="username"
+    bind:value={values.username}
+  />
 
-<div
-  style="background-color: {$boxProps.color}; width: {$boxProps.width}px; height: {$boxProps.height}px"
-/>
+  <br />
+
+  <label for="email">Email</label>
+  {#if errors.email}
+    <p class="error-message">{errors.email}</p>
+  {/if}
+  <input type="text" id="email" name="email" bind:value={values.email} />
+
+  <br />
+
+  <label for="password">Password</label>
+  {#if errors.password}
+    <p class="error-message">{errors.password}</p>
+  {/if}
+  <input
+    type="text"
+    id="password"
+    name="password"
+    bind:value={values.password}
+  />
+
+  <Button type="submit" disabled={isSubmitting}>Submit</Button>
+</form>
+
+<style>
+  label {
+    display: block;
+  }
+  .error-message {
+    margin: 0;
+    color: red;
+  }
+</style>
